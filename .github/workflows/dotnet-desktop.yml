@@ -36,7 +36,7 @@
 # For a complete CI/CD sample to get started with GitHub Action workflows for Desktop Applications,
 # refer to https://github.com/microsoft/github-actions-for-desktop-apps
 
-name: .NET Core Desktop
+name: .NET Core Desktop CI
 
 on:
   push:
@@ -45,33 +45,38 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
-
-    strategy:
-      matrix:
-        configuration: [Debug]
-
-    runs-on: windows-latest  
+  build-and-test:
+    runs-on: windows-latest
 
     env:
-      Solution_Name: vershinin_DLL_Unit-test1.sln  
-      Test_Project_Path: vershinin_DLL_Unit-test1.csproj 
+      SOLUTION_NAME: "vershinin_DLL_Unit-test1.sln"
+      TEST_PROJECT_PATH: "vershinin_DLL_Unit-test1.csproj"
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
 
-    - name: Install .NET SDK
+    - name: Setup .NET 8
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: '8.0.x'
 
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_NAME }}
 
-    - name: Execute unit tests
-      run:  dotnet test vershinin_DLL_Unit-test1.sln --configuration Debug --no-restore
+    - name: Build solution
+      run: dotnet build ${{ env.SOLUTION_NAME }} --configuration Debug --no-restore
 
+    - name: Run unit tests
+      run: dotnet test ${{ env.TEST_PROJECT_PATH }} --configuration Debug --no-build --logger "trx;LogFileName=test-results.trx"
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: Test-Results
+       
+       
     # Install the .NET Core workload
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
