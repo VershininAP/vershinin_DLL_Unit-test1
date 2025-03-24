@@ -36,43 +36,38 @@
 # For a complete CI/CD sample to get started with GitHub Action workflows for Desktop Applications,
 # refer to https://github.com/microsoft/github-actions-for-desktop-apps
 
-name: .NET Core Desktop
+name: .NET Desktop CI
 
 on:
   push:
-    branches: [ main ]  # Запускать при пуше в ветку main
+    branches: [ main ]  # Запускать при пуше в main
   pull_request:
-    branches: [ main ]  # Запускать при PR в ветку main
+    branches: [ main ]  # Запускать при PR в main
 
 jobs:
   build-and-test:
-    runs-on: windows-latest  # Для .NET Desktop нужна Windows
+    runs-on: windows-latest  # .NET Desktop требует Windows
 
     steps:
-      - uses: actions/checkout@v4  # Клонирует репозиторий
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |  # Укажите версию .NET, например 6.x, 7.x или 8.x
+          dotnet-version: |  # Указываем поддерживаемые версии .NET
             6.0.x
             7.0.x
             8.0.x
 
       - name: Restore dependencies
-        run: dotnet restore  # Восстанавливает NuGet-пакеты
+        run: dotnet restore
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore  # Собирает проект в Release
+        run: dotnet build --configuration Release --no-restore
 
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal  # Запускает юнит-тесты
-
-    # Install the .NET Core workload
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
+        run: dotnet test --no-build --verbosity normal
 
     # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
     - name: Setup MSBuild.exe
