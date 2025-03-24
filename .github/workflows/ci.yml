@@ -1,0 +1,52 @@
+name: .NET Desktop CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOTNET_VERSION: '8.0.x'  # Укажите вашу версию .NET
+  SOLUTION_FILE: 'vershinin_DLL_Unit-test1.sln'  # Укажите ваш .sln файл
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest  # Обязательно для .NET Desktop
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~\.nuget\packages
+            $(SolutionDir)packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.SOLUTION_FILE }}
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test ${{ env.SOLUTION_FILE }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()  # Загружает результаты даже если тесты упали
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test-Results
+          path: |
+            **/TestResults/*.trx
+            **/coverage.cobertura.xml
