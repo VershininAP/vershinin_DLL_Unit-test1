@@ -1,0 +1,31 @@
+name: .NET Desktop CI
+
+on:
+  push:
+    branches: [ main ]  # Запускать при пуше в ветку main
+  pull_request:
+    branches: [ main ]  # Запускать при PR в ветку main
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest  # Для .NET Desktop нужна Windows
+
+    steps:
+      - uses: actions/checkout@v4  # Клонирует репозиторий
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |  # Укажите версию .NET, например 6.x, 7.x или 8.x
+            6.0.x
+            7.0.x
+            8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore  # Восстанавливает NuGet-пакеты
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore  # Собирает проект в Release
+
+      - name: Run tests
+        run: dotnet test --no-build --verbosity normal  # Запускает юнит-тесты
