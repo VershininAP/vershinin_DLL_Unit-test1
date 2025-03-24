@@ -54,7 +54,7 @@ jobs:
     runs-on: windows-latest  
 
     env:
-      Solution_Name: vershinin_DLL_Unit-test1.sln.sln  
+      Solution_Name: vershinin_DLL_Unit-test1.sln  
       Test_Project_Path: vershinin_DLL_Unit-test1.csproj 
 
     steps:
