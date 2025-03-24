@@ -36,38 +36,58 @@
 # For a complete CI/CD sample to get started with GitHub Action workflows for Desktop Applications,
 # refer to https://github.com/microsoft/github-actions-for-desktop-apps
 
-name: .NET Desktop CI
+name: .NET Desktop CI/CD
 
 on:
   push:
-    branches: [ main ]  # Запускать при пуше в main
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]  # Запускать при PR в main
+    branches: [ main ]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  SOLUTION_FILE: 'vershinin_DLL_Unit-test1.sln'
 
 jobs:
   build-and-test:
-    runs-on: windows-latest  # .NET Desktop требует Windows
+    runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |  # Указываем поддерживаемые версии .NET
-            6.0.x
-            7.0.x
-            8.0.x
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~\.nuget\packages
+            $(SolutionDir)packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore ${{ env.SOLUTION_FILE }}
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore
 
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test ${{ env.SOLUTION_FILE }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test-Results
+          path: |
+            **/TestResults/*.trx
+            **/coverage.cobertura.xml
 
     # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
     - name: Setup MSBuild.exe
