@@ -71,21 +71,6 @@ jobs:
 
     - name: Execute unit tests
       run:  dotnet test vershinin_DLL_Unit-test1.sln --configuration Debug --no-restore
-
-    - name: Restore dependencies
-      run: dotnet restore ${{ env.SOLUTION_NAME }}
-
-    - name: Build solution
-      run: dotnet build ${{ env.SOLUTION_NAME }} --configuration Debug --no-restore
-
-    - name: Run unit tests
-      run: dotnet test ${{ env.TEST_PROJECT_PATH }} --configuration Debug --no-build --logger "trx;LogFileName=test-results.trx"
-
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: Test-Results
        
        
     # Install the .NET Core workload
